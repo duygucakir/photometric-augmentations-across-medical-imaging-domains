@@ -105,21 +105,6 @@ python visualization/generate_all_sigma_grid.py
 
 Custom dataset and output locations can be supplied with `--data-root` and `--output`.
 
-## Reported results
-
-The complete fold-level metrics are in [`results/fold_level_results.md`](results/fold_level_results.md). Machine-readable statistical comparisons are under `results/statistical_tests/`.
-
-Selected macro-F1 results from the manuscript:
-
-| Dataset/task | Baseline | Best observed condition | Best macro-F1 | RGB-high macro-F1 |
-|---|---:|---|---:|---:|
-| APTOS | 0.6318 | B-low | 0.6366 | 0.1960 |
-| Skin | 0.9259 | B-medium | 0.9400 | 0.8665 |
-| Barrett's | 0.7165 | G-low | 0.7175 | 0.5071 |
-| Esophagitis | 0.8631 | RGB-low | 0.8695 | 0.5401 |
-| Polyps | 0.9896 | R-low (closest) | 0.9893 | 0.7165 |
-| Ulcerative colitis | 0.9769 | RGB-low (closest) | 0.9762 | 0.7964 |
-
 ## Reproducibility notes
 
 - The random seed is fixed at `42`.
@@ -129,23 +114,11 @@ Selected macro-F1 results from the manuscript:
 - Pretrained Xception weights are downloaded by `timm` on first use.
 - Full training is computationally expensive; run a single dataset and condition first to validate the environment.
 
-### Archived implementation details to preserve
-
-The included code is the implementation that produced the archived results. Two details should be kept in mind when comparing the repository with prose descriptions of the method:
-
-1. Channel noise is added after torchvision conversion and ImageNet normalization. The tensor is not clipped after noise is added.
-2. `training.use_weighted_sampler` defaults to `true`, reproducing the inverse-frequency `WeightedRandomSampler` used by the archived runner. Set it to `false` to train with ordinary shuffled batches, but doing so changes the experimental protocol and will not be directly comparable to the included results.
-
-Changing either behavior requires rerunning the affected experiments and updating the reported results.
-
 ## Citation
 
 If you use this code, cite the associated article:
 
 > On the Transferability of Photometric Augmentations Across Medical Imaging Domains.
 
-Publication metadata and a DOI can be added here when available.
+Publication metadata and a DOI will be added here when available.
 
-## License
-
-No software license has been selected yet. Add an appropriate `LICENSE` file before publishing the repository if you intend others to reuse or modify the code.
