@@ -16,7 +16,6 @@ from collections import defaultdict
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader, WeightedRandomSampler
 
 logger = logging.getLogger(__name__)
 
@@ -316,13 +315,3 @@ def train_fold(model, train_loader, val_loader, config, condition_config,
     load_checkpoint(checkpoint_path, model, device=device)
     
     return metrics_history, best_epoch
-
-
-def create_weighted_sampler(labels):
-    """Create WeightedRandomSampler for class imbalance."""
-    labels_arr = np.array(labels)
-    class_counts = np.bincount(labels_arr)
-    class_weights = 1.0 / torch.tensor(class_counts, dtype=torch.float)
-    sample_weights = class_weights[labels_arr]
-    sampler = WeightedRandomSampler(sample_weights, len(sample_weights))
-    return sampler

@@ -6,7 +6,6 @@ Applied ONLY to training batches. Validation/test remain clean.
 """
 
 import torch
-import numpy as np
 import logging
 
 logger = logging.getLogger(__name__)
@@ -17,9 +16,9 @@ class ChannelPerturbation:
     Channel-wise Gaussian perturbation for training augmentation.
     
     ε ~ N(0, σ²) applied per-pixel, per-selected-channel.
-    This archived implementation operates on ImageNet-normalized tensors.
-    Sigma is scaled from [0,255] space to [0,1] space and the result is not
-    clipped. This behavior is retained to reproduce the reported runs.
+    The transform receives an unnormalized tensor in [0, 1], corresponding
+    to pixel intensities in [0, 255]. Sigma is scaled by 255, noise is added,
+    and the result is clipped before ImageNet normalization.
     """
     
     def __init__(self, channels, sigma, seed=None):
@@ -44,7 +43,7 @@ class ChannelPerturbation:
         Apply perturbation to a single image tensor.
         
         Args:
-            tensor: [C, H, W] ImageNet-normalized image tensor
+            tensor: unnormalized [C, H, W] image tensor in [0, 1]
         
         Returns:
             perturbed tensor
@@ -54,36 +53,11 @@ class ChannelPerturbation:
             noise[ch_idx] = torch.randn_like(tensor[ch_idx]) * self.sigma_normalized
         
         perturbed = tensor + noise
-        return perturbed
+        return torch.clamp(perturbed, 0.0, 1.0)
     
     def __repr__(self):
         return (f"ChannelPerturbation(channels={self.channels}, "
                 f"sigma={self.sigma_raw}, sigma_norm={self.sigma_normalized:.4f})")
-
-
-class PerturbedTrainDataset(torch.utils.data.Dataset):
-    """
-    Wrapper dataset that applies channel-wise Gaussian perturbation 
-    on-the-fly during training. Applied ONLY to train data.
-    """
-    
-    def __init__(self, base_dataset, channels, sigma):
-        """
-        Args:
-            base_dataset: underlying dataset returning (tensor, label) tuples
-            channels: list of channel names to perturb
-            sigma: noise std in [0,255] scale
-        """
-        self.base_dataset = base_dataset
-        self.perturbation = ChannelPerturbation(channels, sigma)
-        
-    def __len__(self):
-        return len(self.base_dataset)
-    
-    def __getitem__(self, idx):
-        img, label = self.base_dataset[idx]
-        img = self.perturbation(img)
-        return img, label
 
 
 def resolve_sigma(config, condition_config):

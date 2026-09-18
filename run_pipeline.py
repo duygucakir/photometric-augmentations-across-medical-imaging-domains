@@ -43,11 +43,11 @@ from data.data_loader import (
 )
 from preprocessing.preprocessor import create_preprocessing_fn, log_preprocessing_config
 from augmentation.perturbation import (
-    PerturbedTrainDataset, resolve_sigma, log_perturbation_config
+    ChannelPerturbation, resolve_sigma, log_perturbation_config
 )
 from models.xception_model import build_model, get_num_classes
 from training.trainer import (
-    train_fold, evaluate, create_weighted_sampler,
+    train_fold, evaluate,
     get_checkpoint_path, load_experiment_status, save_experiment_status,
     is_fold_completed, mark_fold_status, load_checkpoint
 )
@@ -309,11 +309,30 @@ def run_single_experiment(config, condition_name, condition_config,
             val_labels = [labels[i] for i in val_indices]
             test_paths = [image_paths[i] for i in test_indices]
             test_labels = [labels[i] for i in test_indices]
+
+            # Apply Gaussian noise after ToTensor() and before ImageNet
+            # normalization. ChannelPerturbation clips the unnormalized tensor
+            # to [0, 1], equivalent to clipping pixel intensities to [0, 255].
+            pert_cfg = condition_config.get('perturbation', {})
+            train_perturbation = None
+            if pert_cfg.get('enabled', False) and sigma is not None:
+                channels = pert_cfg.get('channels', [])
+                train_perturbation = ChannelPerturbation(channels, sigma)
+                logger.info(
+                    f"  Perturbation applied before normalization: "
+                    f"channels={channels}, sigma={sigma}"
+                )
+            else:
+                logger.info("  No perturbation applied")
             
             # Create base datasets
             train_ds = BaseImageDataset(
                 train_paths, train_labels,
-                transform=get_transforms(img_size, is_train=True),
+                transform=get_transforms(
+                    img_size,
+                    is_train=True,
+                    perturbation=train_perturbation,
+                ),
                 preprocessing_fn=preprocess_fn
             )
             val_ds = BaseImageDataset(
@@ -327,31 +346,12 @@ def run_single_experiment(config, condition_name, condition_config,
                 preprocessing_fn=preprocess_fn
             )
             
-            # Apply perturbation to training data only
-            pert_cfg = condition_config.get('perturbation', {})
-            if pert_cfg.get('enabled', False) and sigma is not None:
-                channels = pert_cfg.get('channels', [])
-                train_ds = PerturbedTrainDataset(train_ds, channels, sigma)
-                logger.info(f"  Perturbation applied: channels={channels}, sigma={sigma}")
-            else:
-                logger.info("  No perturbation applied")
-            
             # Create data loaders
             batch_size = config.get('training', {}).get('batch_size', 32)
             num_workers = config.get('training', {}).get('num_workers', 4)  # Safe with spawn multiprocessing
             
-            # The archived experiments used inverse-frequency weighted sampling.
-            use_weighted_sampler = config.get('training', {}).get(
-                'use_weighted_sampler', True
-            )
-            train_sampler = (
-                create_weighted_sampler(train_labels)
-                if use_weighted_sampler else None
-            )
-            
             train_loader = DataLoader(
-                train_ds, batch_size=batch_size, sampler=train_sampler,
-                shuffle=train_sampler is None,
+                train_ds, batch_size=batch_size, shuffle=True,
                 num_workers=num_workers, pin_memory=True
             )
             val_loader = DataLoader(

@@ -18,9 +18,8 @@ from collections import Counter
 
 from sklearn.model_selection import StratifiedKFold
 from PIL import Image, ImageFile
-import torch
-from torch.utils.data import Dataset, DataLoader, Subset
-from torchvision import transforms, datasets
+from torch.utils.data import Dataset
+from torchvision import transforms
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 logger = logging.getLogger(__name__)
@@ -66,42 +65,6 @@ class BaseImageDataset(Dataset):
             img = self.transform(img)
             
         return img, int(label)
-
-
-class PerturbedDataset(Dataset):
-    """Wrapper that applies channel-wise Gaussian perturbation to training data."""
-    
-    def __init__(self, base_dataset, channels, sigma, seed=42):
-        self.base_dataset = base_dataset
-        self.channels = channels  # List of "R", "G", "B"
-        self.sigma = sigma
-        self.rng = np.random.RandomState(seed)
-        
-        # Channel index mapping
-        self.channel_map = {"R": 0, "G": 1, "B": 2}
-        self.channel_indices = [self.channel_map[c] for c in channels]
-        
-    def __len__(self):
-        return len(self.base_dataset)
-    
-    def __getitem__(self, idx):
-        img, label = self.base_dataset[idx]
-        
-        # img is a tensor [C, H, W] after transforms (already normalized)
-        # We apply perturbation BEFORE normalization ideally, but since transforms
-        # handle normalization, we apply noise in normalized space using scaled sigma
-        # sigma is given in [0,255] space, we convert to [0,1] space: sigma/255
-        sigma_normalized = self.sigma / 255.0
-        
-        noise = torch.zeros_like(img)
-        for ch_idx in self.channel_indices:
-            noise[ch_idx] = torch.randn_like(img[ch_idx]) * sigma_normalized
-        
-        img = img + noise
-        # Note: We don't clip here because the image is in normalized space
-        # The model can handle slightly out-of-range values
-        
-        return img, label
 
 
 # =============================================================================
@@ -352,16 +315,24 @@ def get_or_create_splits(config, dataset_name, task=None):
 # Transforms
 # =============================================================================
 
-def get_transforms(img_size=299, is_train=True):
-    """Get standard transforms for Xception."""
+def get_transforms(img_size=299, is_train=True, perturbation=None):
+    """Build transforms, applying optional photometric noise before normalization."""
     if is_train:
-        return transforms.Compose([
+        transform_steps = [
             transforms.Resize((img_size, img_size)),
             transforms.RandomHorizontalFlip(),
             transforms.RandomVerticalFlip(),
             transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ])
+        ]
+        if perturbation is not None:
+            transform_steps.append(perturbation)
+        transform_steps.append(
+            transforms.Normalize(
+                [0.485, 0.456, 0.406],
+                [0.229, 0.224, 0.225],
+            )
+        )
+        return transforms.Compose(transform_steps)
     else:
         return transforms.Compose([
             transforms.Resize((img_size, img_size)),
