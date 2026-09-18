@@ -1,0 +1,295 @@
+# =============================================================================
+# Experiment Registry
+# All experimental conditions for Phase 3
+# =============================================================================
+
+# Each condition specifies overrides to base_config.yaml
+
+conditions:
+  # --- Baselines ---
+  baseline_none:
+    description: "No preprocessing, no perturbation"
+    preprocessing:
+      enabled: false
+    perturbation:
+      enabled: false
+      
+  baseline_pre:
+    description: "Preprocessing only, no perturbation"
+    preprocessing:
+      enabled: true
+    perturbation:
+      enabled: false
+
+  # --- Main perturbation conditions (with preprocessing) ---
+  pre_R_med:
+    description: "Preprocessing + R channel jitter (medium sigma)"
+    preprocessing:
+      enabled: true
+    perturbation:
+      enabled: true
+      channels: ["R"]
+      sigma: "medium"
+
+  pre_G_med:
+    description: "Preprocessing + G channel jitter (medium sigma)"
+    preprocessing:
+      enabled: true
+    perturbation:
+      enabled: true
+      channels: ["G"]
+      sigma: "medium"
+
+  pre_B_med:
+    description: "Preprocessing + B channel jitter (medium sigma)"
+    preprocessing:
+      enabled: true
+    perturbation:
+      enabled: true
+      channels: ["B"]
+      sigma: "medium"
+
+  pre_RGB_med:
+    description: "Preprocessing + RGB channel jitter (medium sigma)"
+    preprocessing:
+      enabled: true
+    perturbation:
+      enabled: true
+      channels: ["R", "G", "B"]
+      sigma: "medium"
+
+  # --- Reviewer-requested ablations (no preprocessing + perturbation) ---
+  nopre_B_med:
+    description: "No preprocessing + B channel jitter (medium sigma)"
+    preprocessing:
+      enabled: false
+    perturbation:
+      enabled: true
+      channels: ["B"]
+      sigma: "medium"
+
+  nopre_RGB_med:
+    description: "No preprocessing + RGB channel jitter (medium sigma)"
+    preprocessing:
+      enabled: false
+    perturbation:
+      enabled: true
+      channels: ["R", "G", "B"]
+      sigma: "medium"
+
+  nopre_R_med:
+    description: "No preprocessing + R channel jitter (medium sigma)"
+    preprocessing:
+      enabled: false
+    perturbation:
+      enabled: true
+      channels: ["R"]
+      sigma: "medium"
+
+  nopre_G_med:
+    description: "No preprocessing + G channel jitter (medium sigma)"
+    preprocessing:
+      enabled: false
+    perturbation:
+      enabled: true
+      channels: ["G"]
+      sigma: "medium"
+
+  # --- Sigma sensitivity ablations ---
+  pre_B_low:
+    description: "Preprocessing + B jitter (low sigma)"
+    preprocessing:
+      enabled: true
+    perturbation:
+      enabled: true
+      channels: ["B"]
+      sigma: "low"
+
+  pre_B_high:
+    description: "Preprocessing + B jitter (high sigma)"
+    preprocessing:
+      enabled: true
+    perturbation:
+      enabled: true
+      channels: ["B"]
+      sigma: "high"
+
+  pre_RGB_low:
+    description: "Preprocessing + RGB jitter (low sigma)"
+    preprocessing:
+      enabled: true
+    perturbation:
+      enabled: true
+      channels: ["R", "G", "B"]
+      sigma: "low"
+
+  pre_RGB_high:
+    description: "Preprocessing + RGB jitter (high sigma)"
+    preprocessing:
+      enabled: true
+    perturbation:
+      enabled: true
+      channels: ["R", "G", "B"]
+      sigma: "high"
+
+  # --- R channel sigma sensitivity ---
+  pre_R_low:
+    description: "Preprocessing + R jitter (low sigma)"
+    preprocessing:
+      enabled: true
+    perturbation:
+      enabled: true
+      channels: ["R"]
+      sigma: "low"
+
+  pre_R_high:
+    description: "Preprocessing + R jitter (high sigma)"
+    preprocessing:
+      enabled: true
+    perturbation:
+      enabled: true
+      channels: ["R"]
+      sigma: "high"
+
+  # --- G channel sigma sensitivity ---
+  pre_G_low:
+    description: "Preprocessing + G jitter (low sigma)"
+    preprocessing:
+      enabled: true
+    perturbation:
+      enabled: true
+      channels: ["G"]
+      sigma: "low"
+
+  pre_G_high:
+    description: "Preprocessing + G jitter (high sigma)"
+    preprocessing:
+      enabled: true
+    perturbation:
+      enabled: true
+      channels: ["G"]
+      sigma: "high"
+
+  # --- No-preprocessing sigma sensitivity ---
+  nopre_B_low:
+    description: "No preprocessing + B jitter (low sigma)"
+    preprocessing:
+      enabled: false
+    perturbation:
+      enabled: true
+      channels: ["B"]
+      sigma: "low"
+
+  nopre_B_high:
+    description: "No preprocessing + B jitter (high sigma)"
+    preprocessing:
+      enabled: false
+    perturbation:
+      enabled: true
+      channels: ["B"]
+      sigma: "high"
+
+  nopre_R_low:
+    description: "No preprocessing + R jitter (low sigma)"
+    preprocessing:
+      enabled: false
+    perturbation:
+      enabled: true
+      channels: ["R"]
+      sigma: "low"
+
+  nopre_R_high:
+    description: "No preprocessing + R jitter (high sigma)"
+    preprocessing:
+      enabled: false
+    perturbation:
+      enabled: true
+      channels: ["R"]
+      sigma: "high"
+
+  nopre_G_low:
+    description: "No preprocessing + G jitter (low sigma)"
+    preprocessing:
+      enabled: false
+    perturbation:
+      enabled: true
+      channels: ["G"]
+      sigma: "low"
+
+  nopre_G_high:
+    description: "No preprocessing + G jitter (high sigma)"
+    preprocessing:
+      enabled: false
+    perturbation:
+      enabled: true
+      channels: ["G"]
+      sigma: "high"
+
+  nopre_RGB_low:
+    description: "No preprocessing + RGB jitter (low sigma)"
+    preprocessing:
+      enabled: false
+    perturbation:
+      enabled: true
+      channels: ["R", "G", "B"]
+      sigma: "low"
+
+  nopre_RGB_high:
+    description: "No preprocessing + RGB jitter (high sigma)"
+    preprocessing:
+      enabled: false
+    perturbation:
+      enabled: true
+      channels: ["R", "G", "B"]
+      sigma: "high"
+
+# --- Dataset-task combinations ---
+dataset_tasks:
+  - dataset: aptos
+    task: multiclass
+  - dataset: skin
+    task: binary
+  - dataset: hyperkvasir
+    task: polyps
+  - dataset: hyperkvasir
+    task: barretts
+  - dataset: hyperkvasir
+    task: esophagitis
+  - dataset: hyperkvasir
+    task: ulcerative_colitis
+
+# --- Run order ---
+# Primary conditions to run first
+primary_conditions:
+  - baseline_none
+  - baseline_pre
+  - pre_R_med
+  - pre_G_med
+  - pre_B_med
+  - pre_RGB_med
+
+# Ablation conditions  
+ablation_conditions:
+  - nopre_B_med
+  - nopre_RGB_med
+  - nopre_R_med
+  - nopre_G_med
+
+# Sigma sensitivity conditions
+sigma_conditions:
+  - pre_B_low
+  - pre_B_high
+  - pre_RGB_low
+  - pre_RGB_high
+  - pre_R_low
+  - pre_R_high
+  - pre_G_low
+  - pre_G_high
+  - nopre_B_low
+  - nopre_B_high
+  - nopre_R_low
+  - nopre_R_high
+  - nopre_G_low
+  - nopre_G_high
+  - nopre_RGB_low
+  - nopre_RGB_high

@@ -1,0 +1,8 @@
+{
+  "python": "3.13.5",
+  "torch": "2.7.1",
+  "numpy": "2.2.6",
+  "device": "Apple MPS",
+  "seed": 42,
+  "source": "Recorded experiment environment"
+}

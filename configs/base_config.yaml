@@ -1,0 +1,167 @@
+# =============================================================================
+# Base configuration
+# Transferability of channel-wise photometric perturbations
+# =============================================================================
+
+# --- Reproducibility ---
+seed: 42
+deterministic: true
+
+# --- Data ---
+data:
+  # Relative paths are resolved from the repository root by run_pipeline.py.
+  # The public datasets themselves are intentionally excluded from Git.
+  base_dir: "."
+  splits_dir: "splits"
+  manifests_dir: "outputs/manifests"
+  datasets:
+    aptos:
+      name: "APTOS"
+      type: "multiclass"
+      num_classes: 5
+      class_names: ["No DR", "Mild", "Moderate", "Severe", "Proliferative DR"]
+      train_csv: "datasets/APTOS/train_1.csv"
+      valid_csv: "datasets/APTOS/valid.csv"
+      test_csv: "datasets/APTOS/test.csv"
+      train_img_dir: "datasets/APTOS/train_images/train_images"
+      val_img_dir: "datasets/APTOS/val_images/val_images"
+      img_ext: ".png"
+      stratification: "image_level"  # No patient IDs available
+      
+    skin:
+      name: "ISIC Skin Lesion"
+      type: "binary"
+      num_classes: 2
+      class_names: ["benign", "malignant"]
+      data_dir: "datasets/skin_dataset_resized"
+      train_dir: "datasets/skin_dataset_resized/train_set"
+      val_dir: "datasets/skin_dataset_resized/val_set"
+      img_ext: ".jpg"
+      stratification: "image_level"
+      
+    hyperkvasir:
+      name: "HyperKvasir"
+      type: "binary_subtasks"
+      num_classes: 2
+      class_names: ["negative", "positive"]
+      base_dir: "datasets/The Hyper Kvasir Dataset/dataset"
+      subtasks:
+        polyps:
+          positive_dir: "polyps/1. original/polyps"
+          negative_dir: "polyps/1. original/no-polyps"
+        barretts:
+          positive_dir: "barretts/1. original/barretts"
+          negative_dir: "barretts/1. original/no-barretts"
+        esophagitis:
+          positive_dir: "esophagitis/1. original/esophagitis"
+          negative_dir: "esophagitis/1. original/no-esophagitis"
+        ulcerative_colitis:
+          positive_dir: "ulcerative-colitis/1. original/ulcerative-colitis"
+          negative_dir: "ulcerative-colitis/1. original/no-ulcerative-colitis"
+      img_ext: ".jpg"
+      stratification: "image_level"
+
+# --- Cross-Validation ---
+cv:
+  n_folds: 5
+  train_ratio: 0.6
+  val_ratio: 0.2
+  test_ratio: 0.2
+  shuffle: true
+
+# --- Preprocessing ---
+preprocessing:
+  enabled: false  # Overridden per condition
+  specular_highlight:
+    enabled: true
+    threshold: 200
+    kernel_size: 15
+  histogram_equalization:
+    enabled: true
+    color_space: "HSV"
+    channel: "V"
+
+# --- Perturbation ---
+perturbation:
+  enabled: false  # Overridden per condition
+  channels: []    # "R", "G", "B", or ["R","G","B"]
+  sigma_levels:
+    low: 12.75     # 0.05 * 255
+    medium: 51.0   # 0.20 * 255
+    high: 102.0    # 0.40 * 255
+  default_sigma: "medium"
+  apply_to: "train_only"
+
+# --- Model ---
+model:
+  name: "xception"
+  pretrained: true
+  input_size: 299
+  dropout_rate: 0.5
+  classifier_hidden: 512
+  classifier_dropout: 0.3
+
+# --- Training ---
+training:
+  batch_size: 32
+  epochs: 30
+  patience: 7
+  optimizer:
+    name: "AdamW"
+    lr: 0.0001
+    weight_decay: 0.01
+  scheduler:
+    name: "OneCycleLR"
+    max_lr: 0.0001
+  gradient_clipping:
+    enabled: true
+    max_norm: 1.0
+  label_smoothing: 0.1
+  use_weighted_sampler: true
+  num_workers: 4
+  pin_memory: true
+
+# --- Evaluation ---
+evaluation:
+  primary_metrics: ["accuracy", "macro_f1", "auc"]
+  additional_metrics: ["balanced_accuracy", "mcc", "precision", "recall", "pr_auc", "per_class_f1"]
+  save_confusion_matrices: true
+  save_predictions: true
+  save_probabilities: true
+
+# --- Statistical Tests ---
+statistics:
+  paired_ttest: true
+  holm_bonferroni: true
+  cohens_d: true
+  confidence_interval: 0.95
+  metrics_to_test: ["macro_f1", "auc", "balanced_accuracy"]
+
+# --- Analysis ---
+analysis:
+  channel_histograms:
+    enabled: true
+    n_samples: 500
+    n_bins: 256
+    compute_kl: true
+    compute_wasserstein: true
+  embeddings:
+    enabled: true
+    methods: ["tsne", "umap"]
+    tsne_perplexity: 30
+    umap_n_neighbors: 15
+    n_samples: 500
+  qualitative:
+    enabled: true
+    n_examples: 5
+
+# --- Outputs ---
+outputs:
+  base_dir: "outputs"
+  logs_dir: "outputs/logs"
+  checkpoints_dir: "outputs/checkpoints"
+  metrics_dir: "outputs/metrics"
+  tables_dir: "outputs/tables"
+  figures_dir: "outputs/figures"
+  embeddings_dir: "outputs/embeddings"
+  latex_dir: "outputs/latex"
